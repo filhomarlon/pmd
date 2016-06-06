@@ -277,3 +277,107 @@ MORE : /* Strings */
 |   <~["\n","\r"]>
 |   <"\\" ~["\n","\r"]>
 }
+
+/*VALID STRING AND VALID IDENTIFIER*/
+TOKEN : {
+  			< IDENTIFIER : <LETTER>(<LETTER>|<DIGITOS>)* > { System.out.println("Token: identificador \tLexema: "+ image+"\n");}
+  		| 
+  			< LETTER : ["A"-"Z","_","a"-"z","!"] >
+		}
+
+SKIP : { " "| "\r"| "\t" |"\n"| "#" : IN_LINE_COMMENT }
+<IN_LINE_COMMENT> SKIP:
+{
+   "\n" : DEFAULT
+}
+
+<IN_LINE_COMMENT> MORE:
+{
+  < ~[] >
+}
+
+
+int start() : { int ret=1;}
+{
+   commands()<EOF>
+   {
+     ret = 0;
+   }
+   { return ret;}
+   
+}
+
+
+void commands() : { }
+{
+
+  ( LOOKAHEAD(3)< IDENTIFIER >| LOOKAHEAD(3)variable_declaration() | flow_control() | def_declaration() |print() )*
+
+}
+
+void print() : { }
+{
+	LOOKAHEAD(2)"print" < ASPAS>((< IDENTIFIER> |< DECIMAL>|< INTEGER >|<BTRUE >|< BFALSE> )|< COMMA>)*< ASPAS>
+//  			(
+//  				("+"| "-"|"*" | "/"|">" | "<"|"==" | "!=" | "and"|"or")
+//				(< IDENTIFIER> |< DECIMAL>|< INTEGER >|<BTRUE >|< BFALSE> )
+//			)*"\""
+	|
+	LOOKAHEAD(2)"print" (< IDENTIFIER> |< DECIMAL>|< INTEGER >|<BTRUE >|< BFALSE> )
+  			(
+  				("+"| "-"|"*" | "/"|">" | "<"|"==" | "!=" | "and"|"or")
+				(< IDENTIFIER> |< DECIMAL>|< INTEGER >|<BTRUE >|< BFALSE> )
+			)*
+	|"print" "("(< IDENTIFIER> |< DECIMAL>|< INTEGER >|<BTRUE >|< BFALSE> )
+  			(
+  				("+"| "-"|"*" | "/"|">" | "<"|"==" | "!=" | "and"|"or")
+				(< IDENTIFIER> |< DECIMAL>|< INTEGER >|<BTRUE >|< BFALSE> )
+			)*")"
+	
+}
+
+void variable_declaration() :
+{}
+{
+  { System.out.println("Regra <variable-dec> ::= <identificador>[=(<identification>|<num>|<boolean>)][<variable-dec>]");}
+	< IDENTIFIER >["="(<IDENTIFIER>|<INTEGER>|<DECIMAL>|<BTRUE>|<BFALSE>)](","< IDENTIFIER >)*
+}
+
+void def_declaration():
+{}
+{
+  { System.out.println("Regra <method-dec>::= def <identificador>( [<variable-dec>(,<variable-dec>)*] )");}
+  "def"< IDENTIFIER >"("(variable_declaration())*")"":"
+  		(
+  		  (< IDENT >)+(LOOKAHEAD(2)variable_declaration() | flow_control() | assignment()|print())
+  		)+
+}
+
+void assignment() :
+{}
+{
+//  { System.out.println("COMANDO_DE_ATRIBUICAO ");}
+{ System.out.println("Regra <assignment>::=<identificador>=(<identificador>|<num>|<boolean>)(<operacoes>(<identificador>|<num>|<boolean>))*");}
+  < IDENTIFIER >"="{ System.out.println("OPERACAO ATRIBUICAO");}(< IDENTIFIER> |< DECIMAL>|< INTEGER >|<BTRUE >|< BFALSE> )
+  					(
+  					  ("+"| "-"|"*" | "/"|">" | "<"|"==" | "!=" | "and"|"or")
+					  (< IDENTIFIER> |< DECIMAL>|< INTEGER >|<BTRUE >|< BFALSE> )
+					)*
+}
+
+void flow_control() : { }
+{
+  ("if"|"while")"("conditional_expression()")"":"
+  (
+     LOOKAHEAD(2)(<IDENT>)+( flow_control() | LOOKAHEAD(1)assignment()| LOOKAHEAD(2)variable_declaration())
+  )+
+}
+
+void conditional_expression() :{}
+{
+  (	< IDENTIFIER> | < DECIMAL>|< INTEGER >| <BTRUE >|< BFALSE>)
+  	(
+  	  (">" | "<"|"==" | "!=" | "and"|"or"|"+"|"-"|"*"|"/")
+  	  (< IDENTIFIER > |< DECIMAL> |< INTEGER>|<BTRUE>|<BFALSE> )
+  	)*
+}
